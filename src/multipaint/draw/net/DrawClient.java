@@ -52,6 +52,7 @@ public class DrawClient implements DrawSocket {
         private String me = null; // self identificator - from server
         private final Pipe pipe;
         private volatile int connected;
+        private volatile boolean ignoreEvents;
 
         public ConnectionThread(Canvas canvas, String host, int port) throws IOException {
             pipe = Pipe.open();
@@ -85,58 +86,56 @@ public class DrawClient implements DrawSocket {
 
             main:
             while (!interrupted()) {
-                if(connected > MAX_CONN){
-                    System.err.println("Force close after 3 tries.");
-                    break;
-                }
                 try {
-                    channel.write(charset.encode("baf\n"));
-                } catch (IOException ex) {
-                    break;
-                }
+                    if (connected > MAX_CONN) {
+                        System.err.println("Force close after 3 tries.");
+                        break;
+                    }
+//                try {
+//                    channel.write(charset.encode("baf\n"));
+//                } catch (IOException ex) {
+//                    break;
+//                }
 
-                try {
-                    selector.select(30000);
-                } catch (IOException ex) {
-                    connected++;
-                    continue;
-                }
-                for (SelectionKey key : selector.selectedKeys()) {
-                    buffer.clear();
-                    if (key.channel() instanceof DatagramChannel) {
-                        try {
-                            channel.read(buffer);
-                        } catch (IOException ex) {
-                            connected++;
-                            continue main;
-                        }
-                        buffer.flip();
-                        debugOut(buffer);
-                        String resp = charset.decode(buffer).toString();
-                        String send = processResponse(resp);
-                        if (send != null) {
+                    try {
+                        selector.select(1000);
+                    } catch (IOException ex) {
+                        connected++;
+                        continue;
+                    }
+                    for (SelectionKey key : selector.selectedKeys()) {
+                        buffer.clear();
+                        if (key.channel() instanceof DatagramChannel) {
                             try {
-                                channel.write(charset.encode(send + "\n"));
+                                channel.read(buffer);
                             } catch (IOException ex) {
                                 connected++;
                                 continue main;
                             }
-                            connected = 0;
-                        }
-                    } else if (key.channel() instanceof Pipe.SourceChannel) {
-                        try {
-                            sourcePipe.read(buffer);
                             buffer.flip();
-                            //debugOut(buffer);
-                            channel.write(buffer);
-                        } catch (IOException ex) {
-                            connected++;
-                            continue main;
+                            debugOut(buffer);
+                            String resp = charset.decode(buffer).toString();
+                            processResponse(resp);
+                        } else if (key.channel() instanceof Pipe.SourceChannel) {
+                            try {
+                                sourcePipe.read(buffer);
+                                buffer.flip();
+                                //debugOut(buffer);
+                                channel.write(buffer);
+                            } catch (IOException ex) {
+                                connected++;
+                                continue main;
+                            }
                         }
-                    }
-                } // end foreach
-                selector.selectedKeys().clear();
+                    } // end foreach
+                    selector.selectedKeys().clear();
+                } catch (Exception e) {
+                    System.err.println("DrawClient main loop error: " + e);
+                    connected++;
+                    continue;
+                }
             } // end main while
+
             try {
                 channel.write(charset.encode("bye " + me));
                 channel.close();
@@ -145,17 +144,16 @@ public class DrawClient implements DrawSocket {
         }
 
         private void debugOut(ByteBuffer bb) {
-            byte[] buff = new byte[BUFFER_SIZE];
-            bb.get(buff, 0, bb.limit());
+            byte[] buff = new byte[bb.limit()];
+            bb.get(buff);
             System.out.println(new String(buff, 0, bb.limit()));
             bb.flip();
         }
 
-        private String processResponse(String resp) {
+        private void processResponse(String resp) {
             String[] split = resp.trim().split(" ");
+            ignoreEvents = true;
             switch (split[0]) {
-                case "ping":
-                    return "pong";
                 case "pong":
                     connected++;
                     break;
@@ -181,7 +179,7 @@ public class DrawClient implements DrawSocket {
                 case "tool":
                     break;
             }
-            return null;
+            ignoreEvents = false;
         }
 
         private class CanvasChangeListener implements ChangeListener {
@@ -196,7 +194,9 @@ public class DrawClient implements DrawSocket {
 
             @Override
             public void draw(int last_x, int last_y, int x, int y) {
-                send("draw " + me + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
+                if (!ignoreEvents) {
+                    send("draw " + me + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
+                }
             }
 
             @Override
@@ -205,12 +205,16 @@ public class DrawClient implements DrawSocket {
 
             @Override
             public void changeColor(Color newColor) {
-                send("color " + me + " " + newColor.getRGB() + "\n");
+                if (!ignoreEvents) {
+                    send("color " + me + " " + newColor.getRGB() + "\n");
+                }
             }
 
             @Override
             public void clear() {
-                send("clear " + me + "\n");
+                if (!ignoreEvents) {
+                    send("clear " + me + "\n");
+                }
             }
         }
     }

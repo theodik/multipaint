@@ -10,7 +10,7 @@ import multipaint.draw.tools.Tool;
 public class Canvas {
     private ArrayList<ChangeListener> listeners = new ArrayList<>();
     private Tool tool;
-    private Color background = null;
+    private Color background = Color.BLACK;
     private final BufferedImage img;
     private final Graphics g;
 

@@ -4,7 +4,7 @@ import java.awt.Color;
 
 public abstract class AbstractTool implements Tool {
     protected Color color = Color.BLACK;
-    private int width = 1;
+    protected int width = 1;
 
     public AbstractTool() {
     }

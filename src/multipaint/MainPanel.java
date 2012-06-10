@@ -11,6 +11,7 @@ import multipaint.draw.DrawPanel;
 import multipaint.draw.net.DrawClient;
 import multipaint.draw.net.DrawNetException;
 import multipaint.draw.net.DrawSocket;
+import multipaint.draw.tools.Tool;
 
 /**
  *
@@ -18,6 +19,7 @@ import multipaint.draw.net.DrawSocket;
  */
 public class MainPanel extends javax.swing.JPanel {
     private DrawSocket sock;
+    private CanvasListener canvasListener = new CanvasListener();
 
     /**
      * Creates new form MainPanel
@@ -231,7 +233,9 @@ public class MainPanel extends javax.swing.JPanel {
         csd.setLocationRelativeTo(frame);
         csd.setVisible(true);
         if (csd.getResult()) {
-            drawPanel.setCanvas(csd.getCanvas());
+            multipaint.draw.Canvas canvas = csd.getCanvas();
+            canvas.addChangeListener(canvasListener);
+            drawPanel.setCanvas(canvas);
             selectNextTab();
         }
 
@@ -246,6 +250,7 @@ public class MainPanel extends javax.swing.JPanel {
         multipaint.draw.Canvas canvas = new multipaint.draw.Canvas(
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 5),
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 6));
+        canvas.addChangeListener(canvasListener);
         assert canvas == null;
         sock = new DrawClient();
         try {
@@ -255,7 +260,7 @@ public class MainPanel extends javax.swing.JPanel {
                     (Integer) serversList.getValueAt(serversList.getSelectedRow(), 2));
             drawPanel.setCanvas(canvas);
         } catch (DrawNetException ex) {
-            System.out.println("DNE:"+ex);
+            System.out.println("DNE:" + ex);
         }
         selectNextTab();
     }//GEN-LAST:event_joinButtonActionPerformed
@@ -288,4 +293,30 @@ public class MainPanel extends javax.swing.JPanel {
     private JList userList;
     private JScrollPane userPane;
     // End of variables declaration//GEN-END:variables
+
+    private class CanvasListener implements multipaint.draw.Canvas.ChangeListener {
+        private void update() {
+            drawingPanel.repaint();
+        }
+
+        @Override
+        public void draw(int last_x, int last_y, int x, int y) {
+            update();
+        }
+
+        @Override
+        public void changeTool(Tool newTool) {
+            update();
+        }
+
+        @Override
+        public void changeColor(Color newColor) {
+            update();
+        }
+
+        @Override
+        public void clear() {
+            update();
+        }
+    }
 }
