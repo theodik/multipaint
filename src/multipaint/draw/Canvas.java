@@ -10,7 +10,7 @@ import multipaint.draw.tools.Tool;
 public class Canvas {
     private ArrayList<ChangeListener> listeners = new ArrayList<>();
     private Tool tool;
-    private Color background = Color.BLACK;
+    private Color background = Color.WHITE;
     private final BufferedImage img;
     private final Graphics g;
 
@@ -20,49 +20,47 @@ public class Canvas {
         tool = new PenTool();
     }
 
-    public void setTool(Tool tool) {
+    public synchronized void setTool(Tool tool) {
         this.tool = tool;
         for (ChangeListener l : listeners) {
             l.changeTool(tool);
         }
     }
 
-    public Canvas setBackground(Color c) {
+    public synchronized void setBackground(Color c) {
         this.background = c;
         for (ChangeListener l : listeners) {
             l.changeColor(c);
         }
-        return this;
     }
 
-    public Canvas setForeground(Color c) {
+    public synchronized void setForeground(Color c) {
         tool.setColor(c);
         for (ChangeListener l : listeners) {
             l.changeTool(tool);
         }
-        return this;
     }
 
-    public void setColor(Color c) {
+    public synchronized void setColor(Color c) {
         setForeground(c);
     }
 
-    public int getWidth() {
+    public synchronized int getWidth() {
         return img.getWidth();
     }
 
-    public int getHeight() {
+    public synchronized int getHeight() {
         return img.getHeight();
     }
 
-    public void draw(int last_x, int last_y, int x, int y) {
+    public synchronized void draw(int last_x, int last_y, int x, int y) {
         tool.draw(g, last_x, last_y, x, y);
         for (ChangeListener l : listeners) {
             l.draw(last_x, last_y, x, y);
         }
     }
 
-    public void clear() {
+    public synchronized void clear() {
         g.setColor(background);
         g.fillRect(0, 0, img.getWidth(), img.getHeight());
         for (ChangeListener l : listeners) {

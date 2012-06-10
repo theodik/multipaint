@@ -4,14 +4,17 @@ import java.awt.Color;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.Pipe;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import multipaint.draw.Canvas;
 import multipaint.draw.Canvas.ChangeListener;
 import multipaint.draw.tools.Tool;
 
 public class DrawClient implements DrawSocket {
-    private ConnectionThread cthread;
+    private ClientThread cthread;
 
     @Override
     public void connect(Canvas canvas, String host, int port) throws DrawNetException {
@@ -19,7 +22,7 @@ public class DrawClient implements DrawSocket {
             throw new DrawNetException("Already connected.");
         }
         try {
-            cthread = new ConnectionThread(canvas, host, port);
+            cthread = new ClientThread(canvas, host, port);
             cthread.start();
         } catch (IOException e) {
             DrawNetException ex = new DrawNetException();
@@ -42,22 +45,21 @@ public class DrawClient implements DrawSocket {
         }
     }
 
-    private class ConnectionThread extends Thread {
+    private class ClientThread extends Thread {
         private static final int BUFFER_SIZE = 512;
         private static final int MAX_CONN = 3;
         private final Charset charset = Charset.forName("UTF-8");
-        private final ChangeListener listener;
+        private final SynchronizedCanvasListener listener;
         private final Canvas canvas;
         private final InetSocketAddress address;
         private String me = null; // self identificator - from server
         private final Pipe pipe;
         private volatile int connected;
-        private volatile boolean ignoreEvents;
 
-        public ConnectionThread(Canvas canvas, String host, int port) throws IOException {
+        public ClientThread(Canvas canvas, String host, int port) throws IOException {
             pipe = Pipe.open();
             this.canvas = canvas;
-            this.listener = new CanvasChangeListener();
+            this.listener = new SynchronizedCanvasListener(pipe, charset);
             canvas.addChangeListener(listener);
             address = new InetSocketAddress(host, port);
         }
@@ -152,7 +154,7 @@ public class DrawClient implements DrawSocket {
 
         private void processResponse(String resp) {
             String[] split = resp.trim().split(" ");
-            ignoreEvents = true;
+            listener.ignoreEvents = true;
             switch (split[0]) {
                 case "pong":
                     connected++;
@@ -179,43 +181,7 @@ public class DrawClient implements DrawSocket {
                 case "tool":
                     break;
             }
-            ignoreEvents = false;
-        }
-
-        private class CanvasChangeListener implements ChangeListener {
-            Pipe.SinkChannel sinkpipe = pipe.sink();
-
-            private void send(String data) {
-                try {
-                    sinkpipe.write(charset.encode(data));
-                } catch (IOException ex) {
-                }
-            }
-
-            @Override
-            public void draw(int last_x, int last_y, int x, int y) {
-                if (!ignoreEvents) {
-                    send("draw " + me + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
-                }
-            }
-
-            @Override
-            public void changeTool(Tool newTool) {
-            }
-
-            @Override
-            public void changeColor(Color newColor) {
-                if (!ignoreEvents) {
-                    send("color " + me + " " + newColor.getRGB() + "\n");
-                }
-            }
-
-            @Override
-            public void clear() {
-                if (!ignoreEvents) {
-                    send("clear " + me + "\n");
-                }
-            }
+            listener.ignoreEvents = false;
         }
     }
 }
