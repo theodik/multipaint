@@ -7,13 +7,13 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
-import multipaint.draw.tools.Tool;
 
 public class DrawPanel extends JPanel {
     private int selfX, selfY, lastX, lastY;
     private int offX = 0, offY = 0;
     private boolean mouseDown = false;
     private Canvas canvas = null;
+    private String error = "Waiting for connection.";
 
     public DrawPanel() {
         MouseAdapter ma = new MouseAdapter() {
@@ -81,7 +81,7 @@ public class DrawPanel extends JPanel {
         g.setColor(getBackground());
         g.fillRect(0, 0, getWidth(), getHeight());
         g.setColor(getForeground());
-        if (canvas != null) {
+        if (error == null && canvas != null) {
             g.drawRect(offX - 1, offY - 1, canvas.getWidth() + 1, canvas.getHeight() + 1);
             canvas.print(g, offX, offY);
             g.setColor(Color.black);
@@ -89,19 +89,32 @@ public class DrawPanel extends JPanel {
             g.drawString("selfX: " + selfX + " selfY: " + selfY + " lastX: " + lastX + " lastY: " + lastY, 10, 30);
             g.drawString("offX: " + offX + ", offY: " + offY, 10, 60);
         } else {
-            String str = "Waiting for connection.";
-            int sw = g.getFontMetrics().stringWidth(str);
-            g.drawString(str, getWidth() / 2 - sw / 2, getHeight() / 2);
+            int sw = g.getFontMetrics().stringWidth(error);
+            g.drawString(error, getWidth() / 2 - sw / 2, getHeight() / 2);
         }
     }
 
     public void setCanvas(Canvas canvas) {
-        if (canvas == null) {
-            return;
-        }
         this.canvas = canvas;
-        offX = getWidth() / 2 - canvas.getWidth() / 2;
-        offY = getHeight() / 2 - canvas.getHeight() / 2;
-        repaint();
+        if (canvas == null) {
+            error = "Waiting for connection.";
+        } else {
+            offX = getWidth() / 2 - canvas.getWidth() / 2;
+            offY = getHeight() / 2 - canvas.getHeight() / 2;
+            error = null;
+            repaint();
+        }
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public void clearError() {
+        setError(null);
     }
 }

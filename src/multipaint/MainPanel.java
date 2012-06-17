@@ -1,8 +1,7 @@
 package multipaint;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.*;
@@ -19,6 +18,7 @@ import multipaint.draw.tools.Tool;
  */
 public class MainPanel extends javax.swing.JPanel {
     private DrawSocket sock;
+    private multipaint.draw.Canvas canvas;
     private CanvasListener canvasListener = new CanvasListener();
 
     /**
@@ -50,15 +50,10 @@ public class MainPanel extends javax.swing.JPanel {
         joinButton = new JButton();
         hostButton = new JButton();
         drawingPanel = new JPanel();
-        toolsBar = new JToolBar();
-        jToggleButton1 = new JToggleButton();
         drawPanel = new DrawPanel();
-        userPane = new JScrollPane();
-        userList = new JList();
-        chatPanel = new JPanel();
-        jScrollPane1 = new JScrollPane();
-        chatText = new JTextArea();
-        chatMessage = new JTextField();
+        toolPanel = new JPanel();
+        disconnect = new JButton();
+        colorChoose = new JButton();
 
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         setName("MainPanel");
@@ -79,8 +74,15 @@ public class MainPanel extends javax.swing.JPanel {
         jLabel2.setText("127.0.0.1");
 
         nameField.setText("Guest");
-        nameField.setToolTipText("");
-        nameField.setMinimumSize(new Dimension(100, 20));
+        nameField.setToolTipText("<html><font color=red size=4>Jméno může mít jen znaky A-Z nebo čísla</font></html>");
+        nameField.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent evt) {
+                nameFieldKeyPressed(evt);
+            }
+            public void keyTyped(KeyEvent evt) {
+                nameFieldKeyTyped(evt);
+            }
+        });
 
         GroupLayout loginPanelLayout = new GroupLayout(loginPanel);
         loginPanel.setLayout(loginPanelLayout);
@@ -94,8 +96,8 @@ public class MainPanel extends javax.swing.JPanel {
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addGroup(loginPanelLayout.createParallelGroup(Alignment.LEADING)
                     .addComponent(jLabel2)
-                    .addComponent(nameField, GroupLayout.PREFERRED_SIZE, 144, GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(380, Short.MAX_VALUE))
+                    .addComponent(nameField, GroupLayout.PREFERRED_SIZE, 133, GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(411, Short.MAX_VALUE))
         );
         loginPanelLayout.setVerticalGroup(
             loginPanelLayout.createParallelGroup(Alignment.LEADING)
@@ -178,16 +180,6 @@ public class MainPanel extends javax.swing.JPanel {
 
         drawingPanel.setLayout(new BorderLayout(3, 3));
 
-        toolsBar.setRollover(true);
-
-        jToggleButton1.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/pen.png")));         jToggleButton1.setSelected(true);
-        jToggleButton1.setText("Pero");
-        jToggleButton1.setFocusable(false);
-        jToggleButton1.setVerticalTextPosition(SwingConstants.BOTTOM);
-        toolsBar.add(jToggleButton1);
-
-        drawingPanel.add(toolsBar, BorderLayout.PAGE_START);
-
         drawPanel.setBackground(new Color(255, 255, 255));
         drawPanel.setCanvas(null);
 
@@ -195,34 +187,34 @@ public class MainPanel extends javax.swing.JPanel {
         drawPanel.setLayout(drawPanelLayout);
         drawPanelLayout.setHorizontalGroup(
             drawPanelLayout.createParallelGroup(Alignment.LEADING)
-            .addGap(0, 542, Short.MAX_VALUE)
+            .addGap(0, 600, Short.MAX_VALUE)
         );
         drawPanelLayout.setVerticalGroup(
             drawPanelLayout.createParallelGroup(Alignment.LEADING)
-            .addGap(0, 263, Short.MAX_VALUE)
+            .addGap(0, 354, Short.MAX_VALUE)
         );
 
         drawingPanel.add(drawPanel, BorderLayout.CENTER);
 
-        userList.setModel(new AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
+        toolPanel.setLayout(new BorderLayout());
+
+        disconnect.setText("Konec");
+        disconnect.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                disconnectActionPerformed(evt);
+            }
         });
-        userPane.setViewportView(userList);
+        toolPanel.add(disconnect, BorderLayout.LINE_END);
 
-        drawingPanel.add(userPane, BorderLayout.EAST);
+        colorChoose.setText("Barva");
+        colorChoose.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                colorChooseActionPerformed(evt);
+            }
+        });
+        toolPanel.add(colorChoose, BorderLayout.LINE_START);
 
-        chatPanel.setLayout(new BorderLayout());
-
-        chatText.setColumns(20);
-        chatText.setRows(5);
-        jScrollPane1.setViewportView(chatText);
-
-        chatPanel.add(jScrollPane1, BorderLayout.CENTER);
-        chatPanel.add(chatMessage, BorderLayout.PAGE_END);
-
-        drawingPanel.add(chatPanel, BorderLayout.PAGE_END);
+        drawingPanel.add(toolPanel, BorderLayout.PAGE_END);
 
         add(drawingPanel, "card3");
     }// </editor-fold>//GEN-END:initComponents
@@ -232,8 +224,8 @@ public class MainPanel extends javax.swing.JPanel {
         CreateServerDialog csd = new CreateServerDialog(frame, true);
         csd.setLocationRelativeTo(frame);
         csd.setVisible(true);
-        if (csd.getResult()) {
-            multipaint.draw.Canvas canvas = csd.getCanvas();
+        if (csd.resultAvailable()) {
+            canvas = csd.getCanvas();
             canvas.addChangeListener(canvasListener);
             drawPanel.setCanvas(canvas);
             selectNextTab();
@@ -247,12 +239,13 @@ public class MainPanel extends javax.swing.JPanel {
 
     private void joinButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
         assert sock != null : "Socket musí být odpojen!";
-        multipaint.draw.Canvas canvas = new multipaint.draw.Canvas(
+        canvas = new multipaint.draw.Canvas(
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 5),
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 6));
         canvas.addChangeListener(canvasListener);
         assert canvas == null;
         sock = new DrawClient();
+        ((DrawClient) sock).setName(nameField.getText());
         try {
             sock.connect(
                     canvas,
@@ -265,23 +258,54 @@ public class MainPanel extends javax.swing.JPanel {
         selectNextTab();
     }//GEN-LAST:event_joinButtonActionPerformed
 
+    private void colorChooseActionPerformed(ActionEvent evt) {//GEN-FIRST:event_colorChooseActionPerformed
+        final Frame frame = (Frame) getTopLevelAncestor();
+        Color newColor = ColorDialog.showAndGetColor(frame);
+        if (newColor != null) {
+            drawPanel.getCanvas().setColor(newColor);
+        }
+    }//GEN-LAST:event_colorChooseActionPerformed
+
+    private void disconnectActionPerformed(ActionEvent evt) {//GEN-FIRST:event_disconnectActionPerformed
+        sock.disconnect();
+        sock = null;
+        // odstraňuji komplet canvas, nemusim odebírat listener
+        //canvas.removeChangeListener(canvasListener);
+        canvas = null;
+        drawPanel.setCanvas(null);
+        selectNextTab();
+    }//GEN-LAST:event_disconnectActionPerformed
+
+    private void nameFieldKeyPressed(KeyEvent evt) {//GEN-FIRST:event_nameFieldKeyPressed
+        if (!Character.toString(evt.getKeyChar()).matches("[a-zA-Z0-9]")) {
+            ToolTipManager.sharedInstance().mouseMoved(
+                    new MouseEvent(nameField, 0, 0, 0,
+                    0, 0, // X-Y of the mouse for the tool tip
+                    0, false));
+            evt.consume();
+        }
+    }//GEN-LAST:event_nameFieldKeyPressed
+
+    private void nameFieldKeyTyped(KeyEvent evt) {//GEN-FIRST:event_nameFieldKeyTyped
+        if (!Character.toString(evt.getKeyChar()).matches("[a-zA-Z0-9]")) {
+            evt.consume();
+        }
+    }//GEN-LAST:event_nameFieldKeyTyped
+
     private void selectNextTab() {
         CardLayout cl = (CardLayout) getLayout();
         cl.next(this);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private JTextField chatMessage;
-    private JPanel chatPanel;
-    private JTextArea chatText;
+    private JButton colorChoose;
     private JPanel connectionPanel;
     private JPanel controlPanel;
+    private JButton disconnect;
     private DrawPanel drawPanel;
     private JPanel drawingPanel;
     private JButton hostButton;
     private JLabel jLabel1;
     private JLabel jLabel2;
-    private JScrollPane jScrollPane1;
-    private JToggleButton jToggleButton1;
     private JButton joinButton;
     private JLabel localIPLabel;
     private JPanel loginPanel;
@@ -289,10 +313,14 @@ public class MainPanel extends javax.swing.JPanel {
     private JButton refreshButton;
     private JTable serversList;
     private JScrollPane serversPane;
-    private JToolBar toolsBar;
-    private JList userList;
-    private JScrollPane userPane;
+    private JPanel toolPanel;
     // End of variables declaration//GEN-END:variables
+
+    public void dispose() {
+        if (sock != null) {
+            sock.disconnect();
+        }
+    }
 
     private class CanvasListener implements multipaint.draw.Canvas.ChangeListener {
         private void update() {

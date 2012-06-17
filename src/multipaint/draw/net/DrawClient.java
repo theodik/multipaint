@@ -15,6 +15,7 @@ import multipaint.draw.tools.Tool;
 
 public class DrawClient implements DrawSocket {
     private ClientThread cthread;
+    private String name;
 
     @Override
     public void connect(Canvas canvas, String host, int port) throws DrawNetException {
@@ -22,7 +23,7 @@ public class DrawClient implements DrawSocket {
             throw new DrawNetException("Already connected.");
         }
         try {
-            cthread = new ClientThread(canvas, host, port);
+            cthread = new ClientThread(canvas, name, host, port);
             cthread.start();
         } catch (IOException e) {
             DrawNetException ex = new DrawNetException();
@@ -45,6 +46,10 @@ public class DrawClient implements DrawSocket {
         }
     }
 
+    public void setName(String text) {
+        this.name = text;
+    }
+
     private class ClientThread extends Thread {
         private static final int BUFFER_SIZE = 512;
         private static final int MAX_CONN = 3;
@@ -52,13 +57,14 @@ public class DrawClient implements DrawSocket {
         private final SynchronizedCanvasListener listener;
         private final Canvas canvas;
         private final InetSocketAddress address;
-        private String me = null; // self identificator - from server
+        private String name = null; // self identificator - from server
         private final Pipe pipe;
         private volatile int connected;
 
-        public ClientThread(Canvas canvas, String host, int port) throws IOException {
+        private ClientThread(Canvas canvas, String name, String host, int port) throws IOException {
             pipe = Pipe.open();
             this.canvas = canvas;
+            this.name = name;
             this.listener = new SynchronizedCanvasListener(pipe, charset);
             canvas.addChangeListener(listener);
             address = new InetSocketAddress(host, port);
@@ -139,7 +145,7 @@ public class DrawClient implements DrawSocket {
             } // end main while
 
             try {
-                channel.write(charset.encode("bye " + me));
+                channel.write(charset.encode("bye " + name));
                 channel.close();
             } catch (IOException ex) {
             }

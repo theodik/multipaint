@@ -128,7 +128,7 @@ public class CreateServerDialog extends javax.swing.JDialog {
         dispose();
     }//GEN-LAST:event_stornoActionPerformed
 
-    public boolean getResult() {
+    public boolean resultAvailable() {
         return result;
     }
 

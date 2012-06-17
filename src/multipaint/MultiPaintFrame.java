@@ -1,10 +1,11 @@
 package multipaint;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
 public class MultiPaintFrame extends JFrame {
-
     /**
      * Creates new form MultiPaintFrame
      */
@@ -13,9 +14,21 @@ public class MultiPaintFrame extends JFrame {
     }
 
     private void initComponents() {
-        MainPanel mainPanel = new MainPanel();
+        final MainPanel mainPanel = new MainPanel();
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                mainPanel.dispose();
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                mainPanel.dispose();
+            }
+        });
+
         setTitle("MultiPaint");
 
         getContentPane().add(mainPanel);
@@ -55,7 +68,6 @@ public class MultiPaintFrame extends JFrame {
          * Create and display the form
          */
         java.awt.EventQueue.invokeLater(new Runnable() {
-
             @Override
             public void run() {
                 new MultiPaintFrame().setVisible(true);

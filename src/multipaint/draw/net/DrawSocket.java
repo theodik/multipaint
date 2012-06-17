@@ -8,5 +8,6 @@ import multipaint.draw.Canvas;
  */
 public interface DrawSocket {
     void connect(Canvas canvas, String host, int port) throws DrawNetException;
+
     void disconnect();
 }
