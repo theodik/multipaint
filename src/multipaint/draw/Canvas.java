@@ -4,63 +4,64 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import multipaint.draw.tools.PenTool;
-import multipaint.draw.tools.Tool;
+import multipaint.draw.tools.*;
 
 public class Canvas {
     private ArrayList<ChangeListener> listeners = new ArrayList<>();
     private Tool tool;
-    private Color background = Color.WHITE;
+    private Color background = null;
     private final BufferedImage img;
     private final Graphics g;
 
     public Canvas(int width, int height) {
         img = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         g = img.createGraphics();
-        tool = new PenTool();
+        tool = new RectangleTool();
     }
 
-    public synchronized void setTool(Tool tool) {
+    public void setTool(Tool tool) {
         this.tool = tool;
         for (ChangeListener l : listeners) {
             l.changeTool(tool);
         }
     }
 
-    public synchronized void setBackground(Color c) {
+    public Canvas setBackground(Color c) {
         this.background = c;
         for (ChangeListener l : listeners) {
             l.changeColor(c);
         }
+        return this;
     }
 
-    public synchronized void setForeground(Color c) {
+    public Canvas setForeground(Color c) {
         tool.setColor(c);
         for (ChangeListener l : listeners) {
             l.changeTool(tool);
         }
+        return this;
     }
 
-    public synchronized void setColor(Color c) {
+    public void setColor(Color c) {
         setForeground(c);
     }
 
-    public synchronized int getWidth() {
+    public int getWidth() {
         return img.getWidth();
     }
 
-    public synchronized int getHeight() {
+    public int getHeight() {
         return img.getHeight();
     }
 
-    public synchronized void draw(int last_x, int last_y, int x, int y) {
+    public void draw(int last_x, int last_y, int x, int y) {
         tool.draw(g, last_x, last_y, x, y);
         for (ChangeListener l : listeners) {
             l.draw(last_x, last_y, x, y);
         }
     }
 
-    public synchronized void clear() {
+    public void clear() {
         g.setColor(background);
         g.fillRect(0, 0, img.getWidth(), img.getHeight());
         for (ChangeListener l : listeners) {

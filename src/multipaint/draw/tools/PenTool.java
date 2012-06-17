@@ -9,5 +9,4 @@ public class PenTool extends AbstractTool {
         g.setColor(color);
         g.drawLine(last_x, last_y, x, y);
     }
-
 }

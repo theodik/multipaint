@@ -14,7 +14,7 @@ import multipaint.draw.Canvas.ChangeListener;
 import multipaint.draw.tools.Tool;
 
 public class DrawClient implements DrawSocket {
-    private ClientThread cthread;
+    private ConnectionThread cthread;
 
     @Override
     public void connect(Canvas canvas, String host, int port) throws DrawNetException {
@@ -22,7 +22,7 @@ public class DrawClient implements DrawSocket {
             throw new DrawNetException("Already connected.");
         }
         try {
-            cthread = new ClientThread(canvas, host, port);
+            cthread = new ConnectionThread(canvas, host, port);
             cthread.start();
         } catch (IOException e) {
             DrawNetException ex = new DrawNetException();
@@ -45,21 +45,21 @@ public class DrawClient implements DrawSocket {
         }
     }
 
-    private class ClientThread extends Thread {
+    private class ConnectionThread extends Thread {
         private static final int BUFFER_SIZE = 512;
         private static final int MAX_CONN = 3;
         private final Charset charset = Charset.forName("UTF-8");
-        private final SynchronizedCanvasListener listener;
+        private final ChangeListener listener;
         private final Canvas canvas;
         private final InetSocketAddress address;
         private String me = null; // self identificator - from server
         private final Pipe pipe;
         private volatile int connected;
 
-        public ClientThread(Canvas canvas, String host, int port) throws IOException {
+        public ConnectionThread(Canvas canvas, String host, int port) throws IOException {
             pipe = Pipe.open();
             this.canvas = canvas;
-            this.listener = new SynchronizedCanvasListener(pipe, charset);
+            this.listener = new CanvasChangeListener();
             canvas.addChangeListener(listener);
             address = new InetSocketAddress(host, port);
         }
@@ -88,56 +88,58 @@ public class DrawClient implements DrawSocket {
 
             main:
             while (!interrupted()) {
+                if(connected > MAX_CONN){
+                    System.err.println("Force close after 3 tries.");
+                    break;
+                }
                 try {
-                    if (connected > MAX_CONN) {
-                        System.err.println("Force close after 3 tries.");
-                        break;
-                    }
-//                try {
-//                    channel.write(charset.encode("baf\n"));
-//                } catch (IOException ex) {
-//                    break;
-//                }
+                    channel.write(charset.encode("baf\n"));
+                } catch (IOException ex) {
+                    break;
+                }
 
-                    try {
-                        selector.select(1000);
-                    } catch (IOException ex) {
-                        connected++;
-                        continue;
-                    }
-                    for (SelectionKey key : selector.selectedKeys()) {
-                        buffer.clear();
-                        if (key.channel() instanceof DatagramChannel) {
-                            try {
-                                channel.read(buffer);
-                            } catch (IOException ex) {
-                                connected++;
-                                continue main;
-                            }
-                            buffer.flip();
-                            //debugOut(buffer);
-                            String resp = charset.decode(buffer).toString();
-                            processResponse(resp);
-                        } else if (key.channel() instanceof Pipe.SourceChannel) {
-                            try {
-                                sourcePipe.read(buffer);
-                                buffer.flip();
-                                //debugOut(buffer);
-                                channel.write(buffer);
-                            } catch (IOException ex) {
-                                connected++;
-                                continue main;
-                            }
-                        }
-                    } // end foreach
-                    selector.selectedKeys().clear();
-                } catch (Exception e) {
-                    System.err.println("DrawClient main loop error: " + e);
+                try {
+                    selector.select(30000);
+                } catch (IOException ex) {
                     connected++;
                     continue;
                 }
+                for (SelectionKey key : selector.selectedKeys()) {
+                    buffer.clear();
+                    if (key.channel() instanceof DatagramChannel) {
+                        try {
+                            channel.read(buffer);
+                        } catch (IOException ex) {
+                            connected++;
+                            continue main;
+                        }
+                        buffer.flip();
+                        debugOut(buffer);
+                        String resp = charset.decode(buffer).toString();
+                        String send = processResponse(resp);
+                        if (send != null) {
+                            try {
+                                channel.write(charset.encode(send + "\n"));
+                            } catch (IOException ex) {
+                                connected++;
+                                continue main;
+                            }
+                            connected = 0;
+                        }
+                    } else if (key.channel() instanceof Pipe.SourceChannel) {
+                        try {
+                            sourcePipe.read(buffer);
+                            buffer.flip();
+                            //debugOut(buffer);
+                            channel.write(buffer);
+                        } catch (IOException ex) {
+                            connected++;
+                            continue main;
+                        }
+                    }
+                } // end foreach
+                selector.selectedKeys().clear();
             } // end main while
-
             try {
                 channel.write(charset.encode("bye " + me));
                 channel.close();
@@ -146,16 +148,17 @@ public class DrawClient implements DrawSocket {
         }
 
         private void debugOut(ByteBuffer bb) {
-            byte[] buff = new byte[bb.limit()];
-            bb.get(buff);
+            byte[] buff = new byte[BUFFER_SIZE];
+            bb.get(buff, 0, bb.limit());
             System.out.println(new String(buff, 0, bb.limit()));
             bb.flip();
         }
 
-        private void processResponse(String resp) {
+        private String processResponse(String resp) {
             String[] split = resp.trim().split(" ");
-            listener.ignoreEvents = true;
             switch (split[0]) {
+                case "ping":
+                    return "pong";
                 case "pong":
                     connected++;
                     break;
@@ -181,7 +184,37 @@ public class DrawClient implements DrawSocket {
                 case "tool":
                     break;
             }
-            listener.ignoreEvents = false;
+            return null;
+        }
+
+        private class CanvasChangeListener implements ChangeListener {
+            Pipe.SinkChannel sinkpipe = pipe.sink();
+
+            private void send(String data) {
+                try {
+                    sinkpipe.write(charset.encode(data));
+                } catch (IOException ex) {
+                }
+            }
+
+            @Override
+            public void draw(int last_x, int last_y, int x, int y) {
+                send("draw " + me + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
+            }
+
+            @Override
+            public void changeTool(Tool newTool) {
+            }
+
+            @Override
+            public void changeColor(Color newColor) {
+                send("color " + me + " " + newColor.getRGB() + "\n");
+            }
+
+            @Override
+            public void clear() {
+                send("clear " + me + "\n");
+            }
         }
     }
 }

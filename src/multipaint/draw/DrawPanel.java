@@ -7,7 +7,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
-import multipaint.draw.tools.Tool;
 
 public class DrawPanel extends JPanel {
     private int selfX, selfY, lastX, lastY;

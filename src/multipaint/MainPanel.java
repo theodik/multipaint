@@ -11,7 +11,6 @@ import multipaint.draw.DrawPanel;
 import multipaint.draw.net.DrawClient;
 import multipaint.draw.net.DrawNetException;
 import multipaint.draw.net.DrawSocket;
-import multipaint.draw.tools.Tool;
 
 /**
  *
@@ -19,7 +18,6 @@ import multipaint.draw.tools.Tool;
  */
 public class MainPanel extends javax.swing.JPanel {
     private DrawSocket sock;
-    private CanvasListener canvasListener = new CanvasListener();
 
     /**
      * Creates new form MainPanel
@@ -52,13 +50,18 @@ public class MainPanel extends javax.swing.JPanel {
         drawingPanel = new JPanel();
         toolsBar = new JToolBar();
         jToggleButton1 = new JToggleButton();
-        drawPanel = new DrawPanel();
+        jToggleButton2 = new JToggleButton();
+        jToggleButton3 = new JToggleButton();
+        jToggleButton4 = new JToggleButton();
+        jToggleButton5 = new JToggleButton();
+        jToggleButton6 = new JToggleButton();
         userPane = new JScrollPane();
         userList = new JList();
         chatPanel = new JPanel();
         jScrollPane1 = new JScrollPane();
         chatText = new JTextArea();
         chatMessage = new JTextField();
+        drawPanel = new DrawPanel();
 
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         setName("MainPanel");
@@ -115,7 +118,7 @@ public class MainPanel extends javax.swing.JPanel {
 
         serversList.setModel(new DefaultTableModel(
             new Object [][] {
-                {"server", "127.0.0.1",  new Integer(1234),  new Integer(0),  new Integer(0),  new Integer(800),  new Integer(600)}
+                {"server", "127.0.0.1",  new Integer(1234),  new Integer(0),  new Integer(0),  new Integer(100),  new Integer(100)}
             },
             new String [] {
                 "Jméno serveru", "IP Adresa", "Port", "Ping", "Počet hráčů", "Výška plochy", "Šířka plochy"
@@ -179,30 +182,97 @@ public class MainPanel extends javax.swing.JPanel {
         drawingPanel.setLayout(new BorderLayout(3, 3));
 
         toolsBar.setRollover(true);
+        toolsBar.setMargin(new Insets(5, 5, 5, 5));
+        toolsBar.setMaximumSize(new Dimension(362, 30));
+        toolsBar.setMinimumSize(new Dimension(362, 30));
+        toolsBar.setPreferredSize(new Dimension(362, 30));
 
-        jToggleButton1.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/pen.png")));         jToggleButton1.setSelected(true);
-        jToggleButton1.setText("Pero");
+        jToggleButton1.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/pen2.png")));         jToggleButton1.setSelected(true);
+        jToggleButton1.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton1.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         jToggleButton1.setFocusable(false);
+        jToggleButton1.setMaximumSize(new Dimension(30, 30));
+        jToggleButton1.setMinimumSize(new Dimension(30, 30));
+        jToggleButton1.setPreferredSize(new Dimension(30, 30));
         jToggleButton1.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton1ActionPerformed(evt);
+            }
+        });
         toolsBar.add(jToggleButton1);
 
+        jToggleButton2.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/brush1.png")));         jToggleButton2.setSelected(true);
+        jToggleButton2.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton2.setFocusable(false);
+        jToggleButton2.setMaximumSize(new Dimension(30, 30));
+        jToggleButton2.setMinimumSize(new Dimension(30, 30));
+        jToggleButton2.setPreferredSize(new Dimension(30, 30));
+        jToggleButton2.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton2ActionPerformed(evt);
+            }
+        });
+        toolsBar.add(jToggleButton2);
+
+        jToggleButton3.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/brush2.png")));         jToggleButton3.setSelected(true);
+        jToggleButton3.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton3.setFocusable(false);
+        jToggleButton3.setMaximumSize(new Dimension(30, 30));
+        jToggleButton3.setMinimumSize(new Dimension(30, 30));
+        jToggleButton3.setPreferredSize(new Dimension(30, 30));
+        jToggleButton3.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton3ActionPerformed(evt);
+            }
+        });
+        toolsBar.add(jToggleButton3);
+
+        jToggleButton4.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/line.png")));         jToggleButton4.setSelected(true);
+        jToggleButton4.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton4.setFocusable(false);
+        jToggleButton4.setMaximumSize(new Dimension(30, 30));
+        jToggleButton4.setMinimumSize(new Dimension(30, 30));
+        jToggleButton4.setPreferredSize(new Dimension(30, 30));
+        jToggleButton4.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton4.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton4ActionPerformed(evt);
+            }
+        });
+        toolsBar.add(jToggleButton4);
+
+        jToggleButton5.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/circle.png")));         jToggleButton5.setSelected(true);
+        jToggleButton5.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton5.setFocusable(false);
+        jToggleButton5.setMaximumSize(new Dimension(30, 30));
+        jToggleButton5.setMinimumSize(new Dimension(30, 30));
+        jToggleButton5.setPreferredSize(new Dimension(30, 30));
+        jToggleButton5.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton5.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton5ActionPerformed(evt);
+            }
+        });
+        toolsBar.add(jToggleButton5);
+
+        jToggleButton6.setIcon(new ImageIcon(getClass().getResource("/multipaint/draw/images/rectangle.png")));         jToggleButton6.setSelected(true);
+        jToggleButton6.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToggleButton6.setFocusable(false);
+        jToggleButton6.setMaximumSize(new Dimension(30, 30));
+        jToggleButton6.setMinimumSize(new Dimension(30, 30));
+        jToggleButton6.setPreferredSize(new Dimension(30, 30));
+        jToggleButton6.setVerticalTextPosition(SwingConstants.BOTTOM);
+        jToggleButton6.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                jToggleButton6ActionPerformed(evt);
+            }
+        });
+        toolsBar.add(jToggleButton6);
+
         drawingPanel.add(toolsBar, BorderLayout.PAGE_START);
-
-        drawPanel.setBackground(new Color(255, 255, 255));
-        drawPanel.setCanvas(null);
-
-        GroupLayout drawPanelLayout = new GroupLayout(drawPanel);
-        drawPanel.setLayout(drawPanelLayout);
-        drawPanelLayout.setHorizontalGroup(
-            drawPanelLayout.createParallelGroup(Alignment.LEADING)
-            .addGap(0, 542, Short.MAX_VALUE)
-        );
-        drawPanelLayout.setVerticalGroup(
-            drawPanelLayout.createParallelGroup(Alignment.LEADING)
-            .addGap(0, 263, Short.MAX_VALUE)
-        );
-
-        drawingPanel.add(drawPanel, BorderLayout.CENTER);
 
         userList.setModel(new AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -224,6 +294,19 @@ public class MainPanel extends javax.swing.JPanel {
 
         drawingPanel.add(chatPanel, BorderLayout.PAGE_END);
 
+        GroupLayout drawPanelLayout = new GroupLayout(drawPanel);
+        drawPanel.setLayout(drawPanelLayout);
+        drawPanelLayout.setHorizontalGroup(
+            drawPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGap(0, 542, Short.MAX_VALUE)
+        );
+        drawPanelLayout.setVerticalGroup(
+            drawPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGap(0, 258, Short.MAX_VALUE)
+        );
+
+        drawingPanel.add(drawPanel, BorderLayout.CENTER);
+
         add(drawingPanel, "card3");
     }// </editor-fold>//GEN-END:initComponents
 
@@ -233,9 +316,7 @@ public class MainPanel extends javax.swing.JPanel {
         csd.setLocationRelativeTo(frame);
         csd.setVisible(true);
         if (csd.getResult()) {
-            multipaint.draw.Canvas canvas = csd.getCanvas();
-            canvas.addChangeListener(canvasListener);
-            drawPanel.setCanvas(canvas);
+            drawPanel.setCanvas(csd.getCanvas());
             selectNextTab();
         }
 
@@ -250,7 +331,6 @@ public class MainPanel extends javax.swing.JPanel {
         multipaint.draw.Canvas canvas = new multipaint.draw.Canvas(
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 5),
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 6));
-        canvas.addChangeListener(canvasListener);
         assert canvas == null;
         sock = new DrawClient();
         try {
@@ -260,10 +340,34 @@ public class MainPanel extends javax.swing.JPanel {
                     (Integer) serversList.getValueAt(serversList.getSelectedRow(), 2));
             drawPanel.setCanvas(canvas);
         } catch (DrawNetException ex) {
-            System.out.println("DNE:" + ex);
+            System.out.println("DNE:"+ex);
         }
         selectNextTab();
     }//GEN-LAST:event_joinButtonActionPerformed
+
+    private void jToggleButton2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton2ActionPerformed
+
+    private void jToggleButton1ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton1ActionPerformed
+
+    private void jToggleButton3ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton3ActionPerformed
+
+    private void jToggleButton4ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton4ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton4ActionPerformed
+
+    private void jToggleButton5ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton5ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton5ActionPerformed
+
+    private void jToggleButton6ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_jToggleButton6ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jToggleButton6ActionPerformed
 
     private void selectNextTab() {
         CardLayout cl = (CardLayout) getLayout();
@@ -282,6 +386,11 @@ public class MainPanel extends javax.swing.JPanel {
     private JLabel jLabel2;
     private JScrollPane jScrollPane1;
     private JToggleButton jToggleButton1;
+    private JToggleButton jToggleButton2;
+    private JToggleButton jToggleButton3;
+    private JToggleButton jToggleButton4;
+    private JToggleButton jToggleButton5;
+    private JToggleButton jToggleButton6;
     private JButton joinButton;
     private JLabel localIPLabel;
     private JPanel loginPanel;
@@ -293,30 +402,4 @@ public class MainPanel extends javax.swing.JPanel {
     private JList userList;
     private JScrollPane userPane;
     // End of variables declaration//GEN-END:variables
-
-    private class CanvasListener implements multipaint.draw.Canvas.ChangeListener {
-        private void update() {
-            drawingPanel.repaint();
-        }
-
-        @Override
-        public void draw(int last_x, int last_y, int x, int y) {
-            update();
-        }
-
-        @Override
-        public void changeTool(Tool newTool) {
-            update();
-        }
-
-        @Override
-        public void changeColor(Color newColor) {
-            update();
-        }
-
-        @Override
-        public void clear() {
-            update();
-        }
-    }
 }

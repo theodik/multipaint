@@ -56,6 +56,11 @@ public class CreateServerDialog extends javax.swing.JDialog {
         jLabel1.setText("Rozměry plátna:");
         jLabel1.setToolTipText("");
 
+        canvasWidth.setRequestFocusEnabled(false);
+        canvasWidth.setValue(100);
+
+        canvasHeight.setValue(100);
+
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText("×");
 
