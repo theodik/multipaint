@@ -115,7 +115,7 @@ public class DrawClient implements DrawSocket {
                                 continue main;
                             }
                             buffer.flip();
-                            debugOut(buffer);
+                            //debugOut(buffer);
                             String resp = charset.decode(buffer).toString();
                             processResponse(resp);
                         } else if (key.channel() instanceof Pipe.SourceChannel) {

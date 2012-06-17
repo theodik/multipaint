@@ -153,10 +153,10 @@
                       <Data value="0"/>
                     </Column>
                     <Column editable="true" title="V&#xfd;&#x161;ka plochy" type="java.lang.Integer">
-                      <Data value="100"/>
+                      <Data value="800"/>
                     </Column>
                     <Column editable="true" title="&#x160;&#xed;&#x159;ka plochy" type="java.lang.Integer">
-                      <Data value="100"/>
+                      <Data value="600"/>
                     </Column>
                   </Table>
                 </Property>

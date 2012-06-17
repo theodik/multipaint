@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import multipaint.draw.Canvas;
 import multipaint.draw.net.server.Client;
 
@@ -51,6 +53,16 @@ public class DrawServer implements DrawSocket {
             throw new IllegalStateException("Server is not bound.");
         }
         return sthread.getClientList();
+    }
+
+    public void send(String data) {
+        if (sthread == null) {
+            throw new IllegalStateException("Server is not bound.");
+        }
+        try {
+            sthread.sendToAll(data);
+        } catch (IOException ex) {
+        }
     }
 
     private class ServerThread extends Thread {
@@ -122,9 +134,12 @@ public class DrawServer implements DrawSocket {
                     }
                 }
             }
-
-            //-- finish --
-
+            try {
+                //-- finish --
+                sendToAll("end");
+                channel.close();
+            } catch (IOException ex) {
+            }
         }
 
         private void sendToAll(String data) throws IOException {
@@ -173,12 +188,17 @@ public class DrawServer implements DrawSocket {
                     case "list":
                         System.out.println(server.getClientList());
                         break;
+                    case "stop":
+                        System.out.println("Stopping server...");
+                        break;
+                    default:
+                        server.send(data);
                 }
             } catch (IOException ex) {
                 System.err.println("Cannot read input: " + ex);
                 break;
             }
-        } while (!data.equals("end"));
+        } while (!data.equals("stop"));
         System.out.println("Disconnecting...");
         server.disconnect();
         System.out.println("Bye.");

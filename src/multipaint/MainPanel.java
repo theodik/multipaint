@@ -115,7 +115,7 @@ public class MainPanel extends javax.swing.JPanel {
 
         serversList.setModel(new DefaultTableModel(
             new Object [][] {
-                {"server", "127.0.0.1",  new Integer(1234),  new Integer(0),  new Integer(0),  new Integer(100),  new Integer(100)}
+                {"server", "127.0.0.1",  new Integer(1234),  new Integer(0),  new Integer(0),  new Integer(800),  new Integer(600)}
             },
             new String [] {
                 "Jméno serveru", "IP Adresa", "Port", "Ping", "Počet hráčů", "Výška plochy", "Šířka plochy"
