@@ -8,11 +8,9 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import multipaint.draw.DrawPanel;
-import multipaint.draw.net.DrawClient;
-import multipaint.draw.net.DrawNetException;
-import multipaint.draw.net.DrawServer;
-import multipaint.draw.net.DrawSocket;
+import multipaint.draw.net.*;
 import multipaint.draw.tools.Tool;
 
 /**
@@ -120,7 +118,7 @@ public class MainPanel extends javax.swing.JPanel {
 
         serversList.setModel(new DefaultTableModel(
             new Object [][] {
-                {"server", "127.0.0.1",  new Integer(1234),  new Integer(0),  new Integer(0),  new Integer(800),  new Integer(600)}
+
             },
             new String [] {
                 "Jméno serveru", "IP Adresa", "Port", "Ping", "Počet hráčů", "Výška plochy", "Šířka plochy"
@@ -184,7 +182,6 @@ public class MainPanel extends javax.swing.JPanel {
         drawingPanel.setLayout(new BorderLayout(3, 3));
 
         drawPanel.setBackground(new Color(255, 255, 255));
-        drawPanel.setCanvas(null);
 
         GroupLayout drawPanelLayout = new GroupLayout(drawPanel);
         drawPanel.setLayout(drawPanelLayout);
@@ -233,18 +230,30 @@ public class MainPanel extends javax.swing.JPanel {
             drawPanel.setCanvas(canvas);
             DrawServer server = new DrawServer();
             try {
-                server.connect(canvas, null, csd.getPort());
+                server.connect(canvas, csd.getName(), csd.getPort());
                 sock = server;
                 selectNextTab();
             } catch (DrawNetException ex) {
                 canvas = null;
-                JOptionPane.showConfirmDialog(this, "Nelze spustit server: "+ex.getLocalizedMessage());
+                JOptionPane.showConfirmDialog(this, "Nelze spustit server: " + ex.getLocalizedMessage());
             }
         }
     }//GEN-LAST:event_hostButtonActionPerformed
 
     private void refreshButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
-        selectNextTab();
+        refreshButton.setEnabled(false);
+        ServerFinder.findServers(new ServerFinder.FindListener() {
+            @Override
+            public void serverFound(String name, String ip, int port, int clients, int width, int height) {
+                final DefaultTableModel model = (DefaultTableModel) serversList.getModel();
+                model.addRow(new Object[]{name, ip, port, 0, clients, width, height});
+            }
+
+            @Override
+            public void done() {
+                refreshButton.setEnabled(true);
+            }
+        });
     }//GEN-LAST:event_refreshButtonActionPerformed
 
     private void joinButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
