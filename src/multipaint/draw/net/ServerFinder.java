@@ -4,20 +4,29 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
+import java.util.HashSet;
 
 public class ServerFinder {
     private static ServerFinder finder;
     private FindListener listener;
-    private final Thread thread;
+    private Thread thread;
 
     public static ServerFinder findServers(FindListener listener) {
-        if (finder == null) {
+        if (finder == null || !finder.thread.isAlive()) {
             finder = new ServerFinder(listener);
             finder.start();
+        }
+        return finder;
+    }
+
+    public static ServerFinder getInstance() {
+        if (finder != null && !finder.thread.isAlive()) {
+            finder = null;
         }
         return finder;
     }
@@ -37,7 +46,7 @@ public class ServerFinder {
         thread.start();
     }
 
-    private void stop() {
+    public void stop() {
         thread.interrupt();
     }
 
@@ -59,16 +68,19 @@ public class ServerFinder {
                 listener.done();
                 return;
             }
-            try {
-                channel.send(charset.encode("info\n"), new InetSocketAddress("255.255.255.255", 12345));
-            } catch (IOException ex) {
-                System.err.println("Failed sending info:" + ex);
-                listener.done();
-                return;
-            }
+
+            HashSet<InetSocketAddress> servers = new HashSet<>();
             long startTime = System.currentTimeMillis();
             ByteBuffer buffer = ByteBuffer.allocateDirect(512);
             while (!interrupted()) {
+                try {
+                    channel.send(charset.encode("info\n"), new InetSocketAddress("255.255.255.255", 12345));
+                } catch (ClosedByInterruptException e) {
+                    break;
+                } catch (IOException ex) {
+                    System.err.println("Failed sending info:" + ex);
+                    break;
+                }
                 try {
                     selector.select(1000);
                 } catch (IOException ex) {
@@ -81,6 +93,9 @@ public class ServerFinder {
                 try {
                     buffer.clear();
                     final InetSocketAddress server = (InetSocketAddress) channel.receive(buffer);
+                    if (!servers.add(server)) {
+                        continue;
+                    }
                     buffer.flip();
                     final String info = charset.decode(buffer).toString();
                     try {
@@ -98,6 +113,8 @@ public class ServerFinder {
                         System.err.println("Erorr parsing response: " + e);
                         break;
                     }
+                } catch (ClosedByInterruptException e) {
+                    break;
                 } catch (IOException e) {
                     System.err.println("Error receiving: " + e);
                     break;

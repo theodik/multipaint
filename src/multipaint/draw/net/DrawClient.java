@@ -147,7 +147,7 @@ public class DrawClient implements DrawSocket {
             } // end main while
 
             try {
-                channel.write(charset.encode("bye " + name));
+                channel.write(charset.encode("bye\n"));
                 channel.close();
             } catch (IOException ex) {
             }

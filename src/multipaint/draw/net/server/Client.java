@@ -37,14 +37,6 @@ public class Client {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Client) {
-            return ((Client)obj).address.equals(address);
-        }
-        return false;
-    }
-
-    @Override
     public String toString() {
         return address.toString();
     }

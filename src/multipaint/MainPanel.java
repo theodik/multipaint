@@ -2,13 +2,10 @@ package multipaint;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import multipaint.draw.DrawPanel;
 import multipaint.draw.net.*;
 import multipaint.draw.tools.Tool;
@@ -241,19 +238,25 @@ public class MainPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_hostButtonActionPerformed
 
     private void refreshButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
-        refreshButton.setEnabled(false);
-        ServerFinder.findServers(new ServerFinder.FindListener() {
-            @Override
-            public void serverFound(String name, String ip, int port, int clients, int width, int height) {
-                final DefaultTableModel model = (DefaultTableModel) serversList.getModel();
-                model.addRow(new Object[]{name, ip, port, 0, clients, width, height});
-            }
+        ServerFinder finder;
+        if ((finder = ServerFinder.getInstance()) != null) {
+            finder.stop();
+        } else {
+            refreshButton.setText("Stop");
+            ((DefaultTableModel) serversList.getModel()).setRowCount(0);
+            ServerFinder.findServers(new ServerFinder.FindListener() {
+                @Override
+                public void serverFound(String name, String ip, int port, int clients, int width, int height) {
+                    final DefaultTableModel model = (DefaultTableModel) serversList.getModel();
+                    model.addRow(new Object[]{name, ip, port, 0, clients, width, height});
+                }
 
-            @Override
-            public void done() {
-                refreshButton.setEnabled(true);
-            }
-        });
+                @Override
+                public void done() {
+                    refreshButton.setText("Obnovit");
+                }
+            });
+        }
     }//GEN-LAST:event_refreshButtonActionPerformed
 
     private void joinButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
