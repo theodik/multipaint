@@ -2,6 +2,8 @@ package multipaint;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.*;
@@ -9,6 +11,7 @@ import javax.swing.table.DefaultTableModel;
 import multipaint.draw.DrawPanel;
 import multipaint.draw.net.DrawClient;
 import multipaint.draw.net.DrawNetException;
+import multipaint.draw.net.DrawServer;
 import multipaint.draw.net.DrawSocket;
 import multipaint.draw.tools.Tool;
 
@@ -228,9 +231,16 @@ public class MainPanel extends javax.swing.JPanel {
             canvas = csd.getCanvas();
             canvas.addChangeListener(canvasListener);
             drawPanel.setCanvas(canvas);
-            selectNextTab();
+            DrawServer server = new DrawServer();
+            try {
+                server.connect(canvas, null, csd.getPort());
+                sock = server;
+                selectNextTab();
+            } catch (DrawNetException ex) {
+                canvas = null;
+                JOptionPane.showConfirmDialog(this, "Nelze spustit server: "+ex.getLocalizedMessage());
+            }
         }
-
     }//GEN-LAST:event_hostButtonActionPerformed
 
     private void refreshButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
@@ -244,10 +254,11 @@ public class MainPanel extends javax.swing.JPanel {
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 6));
         canvas.addChangeListener(canvasListener);
         assert canvas == null;
-        sock = new DrawClient();
-        ((DrawClient) sock).setName(nameField.getText());
+        DrawClient client = new DrawClient();
+        sock = client;
+        client.setName(nameField.getText());
         try {
-            sock.connect(
+            client.connect(
                     canvas,
                     (String) serversList.getValueAt(serversList.getSelectedRow(), 1),
                     (Integer) serversList.getValueAt(serversList.getSelectedRow(), 2));
@@ -328,17 +339,12 @@ public class MainPanel extends javax.swing.JPanel {
         }
 
         @Override
-        public void draw(int last_x, int last_y, int x, int y) {
+        public void draw(Color color, int last_x, int last_y, int x, int y) {
             update();
         }
 
         @Override
         public void changeTool(Tool newTool) {
-            update();
-        }
-
-        @Override
-        public void changeColor(Color newColor) {
             update();
         }
 

@@ -29,16 +29,10 @@ public class Canvas {
 
     public synchronized void setBackground(Color c) {
         this.background = c;
-        for (ChangeListener l : listeners) {
-            l.changeColor(c);
-        }
     }
 
     public synchronized void setForeground(Color c) {
         tool.setColor(c);
-        for (ChangeListener l : listeners) {
-            l.changeTool(tool);
-        }
     }
 
     public synchronized void setColor(Color c) {
@@ -56,7 +50,7 @@ public class Canvas {
     public synchronized void draw(int last_x, int last_y, int x, int y) {
         tool.draw(g, last_x, last_y, x, y);
         for (ChangeListener l : listeners) {
-            l.draw(last_x, last_y, x, y);
+            l.draw(tool.getColor(), last_x, last_y, x, y);
         }
     }
 
@@ -82,11 +76,9 @@ public class Canvas {
     }
 
     public interface ChangeListener {
-        void draw(int last_x, int last_y, int x, int y);
+        void draw(Color color, int last_x, int last_y, int x, int y);
 
         void changeTool(Tool newTool);
-
-        void changeColor(Color newColor);
 
         void clear();
     }

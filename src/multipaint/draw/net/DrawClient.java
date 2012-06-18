@@ -117,6 +117,7 @@ public class DrawClient implements DrawSocket {
                             try {
                                 channel.read(buffer);
                             } catch (IOException ex) {
+                                System.err.println("Channel read err" + ex);
                                 connected++;
                                 continue main;
                             }
@@ -131,6 +132,7 @@ public class DrawClient implements DrawSocket {
                                 //debugOut(buffer);
                                 channel.write(buffer);
                             } catch (IOException ex) {
+                                System.err.println("(Pipe)Send error: " + ex);
                                 connected++;
                                 continue main;
                             }
@@ -163,26 +165,21 @@ public class DrawClient implements DrawSocket {
             listener.ignoreEvents = true;
             switch (split[0]) {
                 case "pong":
-                    connected++;
                     break;
                 case "draw":
                     try {
+                        canvas.setColor(new Color(Integer.parseInt(split[2])));
                         canvas.draw(
-                                Integer.parseInt(split[2]),
                                 Integer.parseInt(split[3]),
                                 Integer.parseInt(split[4]),
-                                Integer.parseInt(split[5]));
+                                Integer.parseInt(split[5]),
+                                Integer.parseInt(split[6]));
                     } catch (NumberFormatException e) {
+                        System.err.println(e);
                     }
                     break;
                 case "clear":
                     canvas.clear();
-                    break;
-                case "color":
-                    try {
-                        canvas.setColor(new Color(Integer.parseInt(split[2])));
-                    } catch (NumberFormatException e) {
-                    }
                     break;
                 case "tool":
                     break;

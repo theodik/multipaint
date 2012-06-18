@@ -26,21 +26,14 @@ class SynchronizedCanvasListener implements Canvas.ChangeListener {
     }
 
     @Override
-    public void draw(int last_x, int last_y, int x, int y) {
+    public void draw(Color color, int last_x, int last_y, int x, int y) {
         if (!ignoreEvents) {
-            send("draw " + me + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
+            send("draw " + me + " " + color.getRGB() + " " + last_x + " " + last_y + " " + x + " " + y + "\n");
         }
     }
 
     @Override
     public void changeTool(Tool newTool) {
-    }
-
-    @Override
-    public void changeColor(Color newColor) {
-        if (!ignoreEvents) {
-            send("color " + me + " " + newColor.getRGB() + "\n");
-        }
     }
 
     @Override
