@@ -258,6 +258,9 @@ public class MainPanel extends javax.swing.JPanel {
 
     private void joinButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
         assert sock != null : "Socket musí být odpojen!";
+        if (serversList.getSelectedRow() == -1) {
+            return;
+        }
         canvas = new multipaint.draw.Canvas(
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 5),
                 (Integer) serversList.getValueAt(serversList.getSelectedRow(), 6));
